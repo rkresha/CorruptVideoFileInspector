@@ -206,7 +206,12 @@ def inspectVideoFiles(directory, tkinter_window, listbox_completed_videos, index
             results_file_path = results_file_path.replace("\\","/")
         results_file_exists = os.path.isfile(results_file_path)
         if results_file_exists:
-            os.remove(results_file_path)
+            results_bak_file_exists = os.path.isfile(f'{results_file_path}.old')
+            if results_bak_file_exists:
+                # Removing existing old file
+                os.remove(f'{results_file_path}.old')
+            # Save off old log file for comparison
+            os.rename(results_file_path,f'{results_file_path}.old')
 
         results_file = open(results_file_path, 'a+', encoding="utf8", newline='')
         results_file_writer = csv.writer(results_file)
@@ -419,7 +424,12 @@ def afterDirectoryChosen(root, directory):
         log_file_path = log_file_path.replace("\\","/")
     log_file_exists = os.path.isfile(log_file_path)
     if log_file_exists:
-        os.remove(log_file_path)
+        log_bak_file_exists = os.path.isfile(f'{log_file_path}.old')
+        if log_bak_file_exists:
+            # Removing existing old file
+            os.remove(f'{log_file_path}.old')
+        # Save off old log file for comparison
+        os.rename(log_file_path,f'{log_file_path}.old')
     log_file = open(log_file_path, 'a', encoding="utf8")
     
     # Logging
