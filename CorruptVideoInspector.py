@@ -13,7 +13,7 @@ from tkinter import ttk
 from tkmacosx import Button as MacButton
 from datetime import datetime
 
-VIDEO_EXTENSIONS = ['.mp4', '.avi', '.mov', '.wmv', '.mkv', '.flv', '.webm', '.m4v', '.m4p', '.mpeg', '.mpg', '.3gp', '.3g2']
+VIDEO_EXTENSIONS = ['3g2', '.3gp', '.3gp2', '.3gpp', '.amr', '.amv', '.asf', '.av1', '.avi', '.bdmv', '.bik', '.d2v', '.divx', '.drc', '.dsa', '.dsm', '.dss', '.dsv', '.evo', '.f4v', '.flc', '.fli', '.flic', '.flv', '.h263', '.h264', '.h265', '.h266', '.hdmov', '.ifo', '.ivf', '.m1v', '.m2p', '.m2t', '.m2ts', '.m2v', '.m4v', '.mkv', '.mp2v', '.mp4', '.mp4v', '.mpe', '.mpeg', '.mpeg2', '.mpg', '.mpg2', '.mpls', '.mpv2', '.mpv4', '.mov', '.mts', '.ogm', '.ogv', '.pss', '.pva', '.qt', '.ram', '.rm', '.rmm', '.rmvb', '.roq', '.rpm', '.smil', '.smk', '.swf', '.tp', '.tpr', '.ts', '.vmaf', '.vob', '.vp6', '.vp8', '.vp9', '.webm', '.wm', '.wmp', '.wmv', '.yuv']
 
 # ========================== CLASSES ===========================
 
@@ -168,8 +168,8 @@ def kill_ffmpeg(root, log_file):
             log_file.write(f'---USER MANUALLY TERMINATED PROGRAM---\n')
             for proc in psutil.process_iter():
                 if proc.name() == "ffmpeg.exe" or proc.name() == "CorruptVideoInspector.exe":
+                    log_file.flush()
                     proc.kill()
-            log_file.flush()
         except Exception as e:
             log_file.write(f'ERROR in "kill_ffmpeg": {e}\n')
             log_file.flush()
@@ -194,14 +194,16 @@ def inspectVideoFiles(directory, tkinter_window, listbox_completed_videos, index
     try:
         global g_count
         global g_currently_processing
-
-        log_file.write('CREATED: _Logs.log\n')
-        log_file.write('CREATED: _Results.csv\n')
+        log_file_basename = os.path.basename(directory)
+        log_file.write(f'CREATED: {log_file_basename}_Logs.log\n')
+        log_file.write(f'CREATED: {log_file_basename}_Results.csv\n')
         log_file.write('=================================================================\n')
         log_file.flush()
 
         # CSV Results file
-        results_file_path = os.path.join(directory, '_Results.csv')
+        results_file_path = os.path.join(directory, f'{log_file_basename}_Results.csv')
+        if isWindowsOs():
+            results_file_path = results_file_path.replace("\\","/")
         results_file_exists = os.path.isfile(results_file_path)
         if results_file_exists:
             os.remove(results_file_path)
@@ -261,7 +263,7 @@ def inspectVideoFiles(directory, tkinter_window, listbox_completed_videos, index
             elif isWindowsOs():
                 global g_windows_pid
                 ffmpeg_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'ffmpeg.exe'))
-                proc = subprocess.Popen(f'"{ffmpeg_path}" -v error -i "{video.full_filepath}" -f null error.log', shell=True,
+                proc = subprocess.Popen(f'"{ffmpeg_path}" -threads 0 -v error -i "{video.full_filepath}" -f null error.log', shell=True,
                                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 g_windows_pid = proc.pid
             else:
@@ -292,6 +294,7 @@ def inspectVideoFiles(directory, tkinter_window, listbox_completed_videos, index
                 print("\033[92m{0}\033[00m".format("HEALTHY -> {}".format(video.filename)), end='\n')  # red
 
                 log_file.write('=================================================================\n')
+                log_file.write(f'File Index Location: {count}\n')
                 log_file.write(f'{video.filename}\n')
                 log_file.write('STATUS: ✓ HEALTHY ✓\n')
                 log_file.write(f'DURATION: {readable_time}\n')
@@ -306,6 +309,7 @@ def inspectVideoFiles(directory, tkinter_window, listbox_completed_videos, index
                 print("\033[31m{0}\033[00m".format("CORRUPTED -> {}".format(video.filename)), end='\n')  # red
 
                 log_file.write('=================================================================\n')
+                log_file.write(f'File Index Location: {count}\n')
                 log_file.write(f'{video.filename}\n')
                 log_file.write('STATUS: X CORRUPT X\n')
                 log_file.write(f'DURATION: {readable_time}\n')
@@ -341,7 +345,6 @@ def inspectVideoFiles(directory, tkinter_window, listbox_completed_videos, index
         log_file.write(f'END TIME: {end_time}\n')
         log_file.write('=================================================================\n')
         log_file.flush()
-        log_file.close()
     except Exception as e:
         log_file.write(f'ERROR in "inspectVideoFiles" (aka main thread): {e}\n')
         log_file.flush()
@@ -410,15 +413,21 @@ def start_program(directory, root, index_start, log_file, label_chosen_directory
 
 def afterDirectoryChosen(root, directory):
     # Log file
-    log_file_path = os.path.join(directory, '_Logs.log')
+    log_file_basename = os.path.basename(directory)
+    log_file_path = os.path.join(directory, f'{log_file_basename}_Logs.log')
+    if isWindowsOs():
+        log_file_path = log_file_path.replace("\\","/")
     log_file_exists = os.path.isfile(log_file_path)
     if log_file_exists:
         os.remove(log_file_path)
     log_file = open(log_file_path, 'a', encoding="utf8")
-
+    
     # Logging
     print('CORRUPT VIDEO FILE INSPECTOR')
     print('')
+    print(f'Directory Name: {log_file_basename}')
+    print(f'Log file: {log_file_path}')
+    print(f'Full Directory: {directory}')
     log_file.write('=================================================================\n')
     log_file.write('                CORRUPT VIDEO FILE INSPECTOR\n')
     log_file.write('=================================================================\n')

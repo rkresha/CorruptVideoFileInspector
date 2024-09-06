@@ -1,3 +1,5 @@
 Command to build windows exe:
+pip install pyinstaller
+pip install psutil
 
-pyinstaller --add-binary="ffmpeg.exe;." --add-data="icon.ico;." --icon="icon.ico" --noconsole --onefile CorruptVideoInspector.py
+pyinstaller --add-binary="ffmpeg.exe;." --add-data="icon.ico;." --icon="icon.ico" --noconsole --onefile CorruptVideoInspector.py --paths=%LOCALAPPDATA%\Programs\Python\Python38\Lib\site-packages\
