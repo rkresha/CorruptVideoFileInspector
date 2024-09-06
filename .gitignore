@@ -1,1 +1,17 @@
 /venv/
+CorruptVideoInspector.spec
+build/CorruptVideoInspector/Analysis-00.toc
+build/CorruptVideoInspector/base_library.zip
+build/CorruptVideoInspector/CorruptVideoInspector.pkg
+build/CorruptVideoInspector/EXE-00.toc
+build/CorruptVideoInspector/PKG-00.toc
+build/CorruptVideoInspector/PYZ-00.pyz
+build/CorruptVideoInspector/PYZ-00.toc
+build/CorruptVideoInspector/warn-CorruptVideoInspector.txt
+build/CorruptVideoInspector/xref-CorruptVideoInspector.html
+build/CorruptVideoInspector/localpycs/pyimod01_archive.pyc
+build/CorruptVideoInspector/localpycs/pyimod02_importers.pyc
+build/CorruptVideoInspector/localpycs/pyimod03_ctypes.pyc
+build/CorruptVideoInspector/localpycs/pyimod04_pywin32.pyc
+build/CorruptVideoInspector/localpycs/struct.pyc
+dist/CorruptVideoInspector.exe
