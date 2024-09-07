@@ -13,7 +13,7 @@ from tkinter import ttk
 from tkmacosx import Button as MacButton
 from datetime import datetime
 
-VIDEO_EXTENSIONS = ['3g2', '.3gp', '.3gp2', '.3gpp', '.amr', '.amv', '.asf', '.av1', '.avi', '.bdmv', '.bik', '.d2v', '.divx', '.drc', '.dsa', '.dsm', '.dss', '.dsv', '.evo', '.f4v', '.flc', '.fli', '.flic', '.flv', '.h263', '.h264', '.h265', '.h266', '.hdmov', '.ifo', '.ivf', '.m1v', '.m2p', '.m2t', '.m2ts', '.m2v', '.m4v', '.mkv', '.mp2v', '.mp4', '.mp4v', '.mpe', '.mpeg', '.mpeg2', '.mpg', '.mpg2', '.mpls', '.mpv2', '.mpv4', '.mov', '.mts', '.ogm', '.ogv', '.pss', '.pva', '.qt', '.ram', '.rm', '.rmm', '.rmvb', '.roq', '.rpm', '.smil', '.smk', '.swf', '.tp', '.tpr', '.ts', '.vmaf', '.vob', '.vp6', '.vp8', '.vp9', '.webm', '.wm', '.wmp', '.wmv', '.yuv']
+VIDEO_EXTENSIONS = ['3g2', '.3gp', '.3gp2', '.3gpp', '.amr', '.amv', '.asf', '.av1', '.avi', '.bdmv', '.bik', '.d2v', '.divx', '.drc', '.dsa', '.dsm', '.dss', '.dsv', '.evo', '.f4v', '.flc', '.fli', '.flic', '.flv', '.h263', '.h264', '.h265', '.h266', '.hdmov', '.ifo', '.ivf', '.m1v', '.m2p', '.m2t', '.m2ts', '.m2v', '.m4v', '.mkv', '.mp2v', '.mp4', '.mp4v', '.mpe', '.mpeg', '.mpeg2', '.mpg', '.mpg2', '.mpls', '.mpv2', '.mpv4', '.mov', '.mts', '.ogm', '.ogv', '.pss', '.pva', '.qt', '.ram', '.rm', '.rmm', '.rmvb', '.roq', '.smil', '.smk', '.swf', '.tp', '.tpr', '.ts', '.vmaf', '.vob', '.vp6', '.vp8', '.vp9', '.webm', '.wm', '.wmp', '.wmv', '.yuv']
 
 # ========================== CLASSES ===========================
 
@@ -190,7 +190,7 @@ def estimatedTime(total_videos):
 def calculateProgress(count, total):
     return "{0}%".format(int((count / total) * 100))
 
-def inspectVideoFiles(directory, tkinter_window, listbox_completed_videos, index_start, log_file, progress_bar):
+def inspectVideoFiles(directory, tkinter_window, listbox_completed_videos, index_start, log_file, progress_bar, markcorrupt):
     try:
         global g_count
         global g_currently_processing
@@ -216,7 +216,10 @@ def inspectVideoFiles(directory, tkinter_window, listbox_completed_videos, index
         results_file = open(results_file_path, 'a+', encoding="utf8", newline='')
         results_file_writer = csv.writer(results_file)
 
-        header = ['Video File', 'Corrupted']
+        if markcorrupt:
+            header = ['Video File', 'Corrupted', 'Renamed']
+        else:
+            header = ['Video File', 'Corrupted']
         results_file_writer.writerow(header)
         results_file.flush()
 
@@ -227,6 +230,7 @@ def inspectVideoFiles(directory, tkinter_window, listbox_completed_videos, index
         log_file.write(f'TOTAL VIDEO FILES FOUND: {totalVideoFiles}\n')
         log_file.write(f'STARTING FROM VIDEO INDEX: {index_start}\n')
         log_file.write(f'START TIME: {start_time}\n')
+        log_file.write(f'MARK CORRUPTED: {markcorrupt}\n')
         log_file.write('=================================================================\n')
         log_file.write('(DURATION IS IN HOURS:MINUTES:SECONDS)\n')
         log_file.flush()
@@ -242,6 +246,7 @@ def inspectVideoFiles(directory, tkinter_window, listbox_completed_videos, index
         all_videos_found.sort(key=lambda x: x.filename)
 
         count = 0
+        fileIndexCounter = index_start
         for video in all_videos_found:
             if (index_start > count + 1):
                 count += 1
@@ -299,13 +304,20 @@ def inspectVideoFiles(directory, tkinter_window, listbox_completed_videos, index
                 print("\033[92m{0}\033[00m".format("HEALTHY -> {}".format(video.filename)), end='\n')  # red
 
                 log_file.write('=================================================================\n')
-                log_file.write(f'File Index Location: {count}\n')
-                log_file.write(f'{video.filename}\n')
+                log_file.write(f'File Index Location: {fileIndexCounter}\n')
+                if isWindowsOs():
+                    fixedFileName = video.full_filepath.replace("\\","/")
+                    log_file.write(f'{fixedFileName}\n')
+                else:
+                    log_file.write(f'{video.filename}\n')
                 log_file.write('STATUS: ✓ HEALTHY ✓\n')
                 log_file.write(f'DURATION: {readable_time}\n')
                 log_file.flush()
 
-                row = [video.filename, 0]
+                if markcorrupt:
+                    row = [video.filename, 0, 0]
+                else:
+                    row = [video.filename, 0]
                 listbox_completed_videos.insert(tk.END, f' {video.filename}')
                 listbox_completed_videos.itemconfig(row_index, bg='green')
                 tkinter_window.update()
@@ -314,13 +326,25 @@ def inspectVideoFiles(directory, tkinter_window, listbox_completed_videos, index
                 print("\033[31m{0}\033[00m".format("CORRUPTED -> {}".format(video.filename)), end='\n')  # red
 
                 log_file.write('=================================================================\n')
-                log_file.write(f'File Index Location: {count}\n')
-                log_file.write(f'{video.filename}\n')
+                log_file.write(f'File Index Location: {fileIndexCounter}\n')
+                if isWindowsOs():
+                    fixedFileName = video.full_filepath.replace("\\","/")
+                    log_file.write(f'{fixedFileName}\n')
+                else:
+                    log_file.write(f'{video.filename}\n')
                 log_file.write('STATUS: X CORRUPT X\n')
+                if markcorrupt:
+                    os.rename(video.full_filepath, f'{video.full_filepath}.corrupt')
+                    log_file.write(f'MARKED CORRUPT: X DONE X\n')
+                    log_file.write(f'New Filename: {fixedFileName}.corrupt\n')
+
                 log_file.write(f'DURATION: {readable_time}\n')
                 log_file.flush()
 
-                row = [video.filename, 1]
+                if markcorrupt:
+                    row = [video.filename, 1, 1]
+                else:
+                    row = [video.filename, 1]
                 listbox_completed_videos.insert(tk.END, f' {video.filename}')
                 listbox_completed_videos.itemconfig(row_index, bg='red')
                 tkinter_window.update()
@@ -329,9 +353,12 @@ def inspectVideoFiles(directory, tkinter_window, listbox_completed_videos, index
             results_file.flush()
 
             count += 1
+            fileIndexCounter += 1
 
             g_progress.set(calculateProgress(count, totalVideoFiles))
             tkinter_window.update()
+
+            
 
         g_count.set("---")
         g_currently_processing.set("N/A")
@@ -354,7 +381,7 @@ def inspectVideoFiles(directory, tkinter_window, listbox_completed_videos, index
         log_file.write(f'ERROR in "inspectVideoFiles" (aka main thread): {e}\n')
         log_file.flush()
 
-def start_program(directory, root, index_start, log_file, label_chosen_directory, label_chosen_directory_var, label_video_count, label_video_count_var, label_index_start, entry_index_input, label_explanation, button_start, listbox_completed_videos):
+def start_program(directory, root, index_start, log_file, label_chosen_directory, label_chosen_directory_var, label_video_count, label_video_count_var, label_index_start, entry_index_input, label_explanation, button_start, listbox_completed_videos, delcheckbox, markcorrupt):
     try:
         label_chosen_directory.destroy()
         label_chosen_directory_var.destroy()
@@ -365,6 +392,7 @@ def start_program(directory, root, index_start, log_file, label_chosen_directory
         label_explanation.destroy()
         button_start.destroy()
         listbox_completed_videos.destroy()
+        delcheckbox.destroy()
 
         label_progress_text = tk.Label(root, text="Progress:", font=('Helvetica Bold', 18))
         label_progress_text.pack(fill=tk.X, pady=10)
@@ -410,7 +438,7 @@ def start_program(directory, root, index_start, log_file, label_chosen_directory
             button_kill_ffmpeg = tk.Button(root, background='#E34234', foreground='white', text="Safely Quit", width=200, command=lambda: kill_ffmpeg_warning(root, log_file))
             button_kill_ffmpeg.pack(pady=10)
 
-        thread = Thread(target=inspectVideoFiles, args=(directory, root, listbox_completed_videos, index_start, log_file, progress_bar))
+        thread = Thread(target=inspectVideoFiles, args=(directory, root, listbox_completed_videos, index_start, log_file, progress_bar, markcorrupt))
         thread.start()
     except Exception as e:
         log_file.write(f'ERROR in "start_program": {e}\n')
@@ -482,13 +510,16 @@ def afterDirectoryChosen(root, directory):
     entry_index_input.pack(fill=tk.X, padx=200)
 
     label_explanation = tk.Label(root, wraplength=450,
-                                 text="The default is '1'. Set index to '1' if you want to start from the beginning and process all videos. If you are resuming a previous operation, then set the index to the desired number. Also note, each run will overwrite the _Logs and _Results files.",
+                                 text="The default is '1'. Set index to '1' if you want to start from the beginning and process all videos. If you are resuming a previous operation, then set the index to the desired number. Also note, each run will save off just the previous run's Log and Results file.",
                                  font=('Helvetica Italic', 12))
     label_explanation.pack(fill=tk.X, pady=5, padx=20)
 
     if totalVideos > 0:
-        button_start = tk.Button(root, text="Start Inspecting", width=25, command=lambda: start_program(directory, root, int(entry_index_input.get()), log_file, label_chosen_directory, label_chosen_directory_var, label_video_count, label_video_count_var, label_index_start, entry_index_input, label_explanation, button_start, listbox_videos_found_with_index))
+        button_start = tk.Button(root, text="Start Inspecting", width=25, command=lambda: start_program(directory, root, int(entry_index_input.get()), log_file, label_chosen_directory, label_chosen_directory_var, label_video_count, label_video_count_var, label_index_start, entry_index_input, label_explanation, button_start, listbox_videos_found_with_index, delcheckbox, markcorrupt.get()))
         button_start.pack(pady=20)
+        markcorrupt = tk.BooleanVar(value=False)
+        delcheckbox = tk.Checkbutton(root, text="Mark Corrupted?", variable=markcorrupt)
+        delcheckbox.pack()
     else:
         root.withdraw()
         error_window = tk.Toplevel(root)
