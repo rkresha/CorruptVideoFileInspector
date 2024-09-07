@@ -334,9 +334,13 @@ def inspectVideoFiles(directory, tkinter_window, listbox_completed_videos, index
                     log_file.write(f'{video.filename}\n')
                 log_file.write('STATUS: X CORRUPT X\n')
                 if markcorrupt:
-                    os.rename(video.full_filepath, f'{video.full_filepath}.corrupt')
+                    renamedfile = f'{video.full_filepath}.corrupt'
+                    renamedfileexists = os.path.isfile(renamedfile)
+                    if renamedfileexists:
+                        os.remove(renamedfile)
+                    os.rename(video.full_filepath, f'{renamedfile}')
                     log_file.write(f'MARKED CORRUPT: X DONE X\n')
-                    log_file.write(f'New Filename: {fixedFileName}.corrupt\n')
+                    log_file.write(f'New Filename: {renamedfile}\n')
 
                 log_file.write(f'DURATION: {readable_time}\n')
                 log_file.flush()
