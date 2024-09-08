@@ -41,6 +41,7 @@ def isLinuxOs():
 
 def selectDirectory(root, label_select_directory, button_select_directory):
     # root.withdraw()
+    #TODO Add multi-select array to loop through
     directory = filedialog.askdirectory()
 
     if len(directory) > 0:
@@ -387,6 +388,8 @@ def inspectVideoFiles(directory, tkinter_window, listbox_completed_videos, index
     except Exception as e:
         log_file.write(f'ERROR in "inspectVideoFiles" (aka main thread): {e}\n')
         log_file.flush()
+    
+    #TODO Add restart button to take user back through prompts to remove need to relaunch
 
 def start_program(directory, root, index_start, log_file, label_chosen_directory, label_chosen_directory_var, label_video_count, label_video_count_var, label_index_start, entry_index_input, label_explanation, button_start, listbox_completed_videos, delcheckbox, markcorrupt):
     try:
@@ -447,6 +450,7 @@ def start_program(directory, root, index_start, log_file, label_chosen_directory
 
         thread = Thread(target=inspectVideoFiles, args=(directory, root, listbox_completed_videos, index_start, log_file, progress_bar, markcorrupt))
         thread.start()
+        
     except Exception as e:
         log_file.write(f'ERROR in "start_program": {e}\n')
         log_file.flush()
@@ -524,7 +528,7 @@ def afterDirectoryChosen(root, directory):
     if totalVideos > 0:
         button_start = tk.Button(root, text="Start Inspecting", width=25, command=lambda: start_program(directory, root, int(entry_index_input.get()), log_file, label_chosen_directory, label_chosen_directory_var, label_video_count, label_video_count_var, label_index_start, entry_index_input, label_explanation, button_start, listbox_videos_found_with_index, delcheckbox, markcorrupt.get()))
         button_start.pack(pady=20)
-        markcorrupt = tk.BooleanVar(value=False)
+        markcorrupt = tk.BooleanVar(value=True)
         delcheckbox = tk.Checkbutton(root, text="Mark Corrupted?", variable=markcorrupt)
         delcheckbox.pack()
     else:
