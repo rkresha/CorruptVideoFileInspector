@@ -194,6 +194,7 @@ def inspectVideoFiles(directory, tkinter_window, listbox_completed_videos, index
     try:
         global g_count
         global g_currently_processing
+        tkinter_window.title(f'Corrupt Video Inspector (Processing: {os.path.basename(directory)})')
         log_file_basename = os.path.basename(directory)
         log_file.write(f'CREATED: {log_file_basename}_Logs.log\n')
         log_file.write(f'CREATED: {log_file_basename}_Results.csv\n')
@@ -338,6 +339,7 @@ def inspectVideoFiles(directory, tkinter_window, listbox_completed_videos, index
                     renamedfileexists = os.path.isfile(renamedfile)
                     if renamedfileexists:
                         os.remove(renamedfile)
+                        log_file.write(f'STILL CORRUPT: X BAD SOURCE FILE? X\n')
                     os.rename(video.full_filepath, f'{renamedfile}')
                     log_file.write(f'MARKED CORRUPT: X DONE X\n')
                     log_file.write(f'New Filename: {renamedfile}\n')
@@ -381,6 +383,7 @@ def inspectVideoFiles(directory, tkinter_window, listbox_completed_videos, index
         log_file.write(f'END TIME: {end_time}\n')
         log_file.write('=================================================================\n')
         log_file.flush()
+        tkinter_window.title(f'Corrupt Video Inspector (Processed: {os.path.basename(directory)})')
     except Exception as e:
         log_file.write(f'ERROR in "inspectVideoFiles" (aka main thread): {e}\n')
         log_file.flush()
