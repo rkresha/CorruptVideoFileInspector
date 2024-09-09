@@ -8,6 +8,7 @@ import psutil
 import signal
 import time
 from threading import Thread
+import tkfilebrowser
 from tkinter import filedialog
 from tkinter import ttk
 from tkmacosx import Button as MacButton
@@ -43,7 +44,11 @@ def selectDirectory(root, label_select_directory, button_select_directory):
     # root.withdraw()
     #TODO Add multi-select array to loop through
     directory = filedialog.askdirectory()
+    #directories = []
+    #directories.append(tkfilebrowser.askopendirnames())
 
+    #if directories.count() > 1:
+        #for directory in directories:
     if len(directory) > 0:
         label_select_directory.destroy()
         button_select_directory.destroy()
@@ -191,7 +196,7 @@ def estimatedTime(total_videos):
 def calculateProgress(count, total):
     return "{0}%".format(int((count / total) * 100))
 
-def inspectVideoFiles(directory, tkinter_window, listbox_completed_videos, index_start, log_file, progress_bar, markcorrupt):
+def inspectVideoFiles(directory, tkinter_window, listbox_completed_videos, index_start, log_file, progress_bar, markcorrupt, button_kill_ffmpeg, button_ffmpeg_verify):
     try:
         global g_count
         global g_currently_processing
@@ -385,9 +390,15 @@ def inspectVideoFiles(directory, tkinter_window, listbox_completed_videos, index
         log_file.write('=================================================================\n')
         log_file.flush()
         tkinter_window.title(f'Corrupt Video Inspector (Processed: {os.path.basename(directory)})')
+        log_file.close()
+        button_kill_ffmpeg.destroy()
+        button_ffmpeg_verify.destroy()
     except Exception as e:
         log_file.write(f'ERROR in "inspectVideoFiles" (aka main thread): {e}\n')
         log_file.flush()
+        log_file.close()
+        button_kill_ffmpeg.destroy()
+        button_ffmpeg_verify.destroy()
     
     #TODO Add restart button to take user back through prompts to remove need to relaunch
 
@@ -448,7 +459,7 @@ def start_program(directory, root, index_start, log_file, label_chosen_directory
             button_kill_ffmpeg = tk.Button(root, background='#E34234', foreground='white', text="Safely Quit", width=200, command=lambda: kill_ffmpeg_warning(root, log_file))
             button_kill_ffmpeg.pack(pady=10)
 
-        thread = Thread(target=inspectVideoFiles, args=(directory, root, listbox_completed_videos, index_start, log_file, progress_bar, markcorrupt))
+        thread = Thread(target=inspectVideoFiles, args=(directory, root, listbox_completed_videos, index_start, log_file, progress_bar, markcorrupt, button_kill_ffmpeg, button_ffmpeg_verify))
         thread.start()
         
     except Exception as e:
