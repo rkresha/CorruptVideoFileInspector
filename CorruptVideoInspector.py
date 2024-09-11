@@ -196,6 +196,37 @@ def estimatedTime(total_videos):
 def calculateProgress(count, total):
     return "{0}%".format(int((count / total) * 100))
 
+def initialState(root=None):
+    if root:
+        # Destroy it all to rebuild
+        root.destroy()
+
+    root = tk.Tk()
+    root.title("Corrupt Video Inspector")
+    global g_progress, g_count, g_currently_processing, g_mac_pid, g_windows_pid
+    g_progress = tk.StringVar()
+    g_count = tk.StringVar()
+    g_currently_processing = tk.StringVar()
+    g_mac_pid = ''
+    g_windows_pid = ''
+
+    if isMacOs():
+        root.geometry("500x650")
+    if isWindowsOs():
+        root.geometry("500x750")
+        icon_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'icon.ico'))
+        root.iconbitmap(default=icon_path)
+
+
+
+    label_select_directory = tk.Label(root, wraplength=450, justify="left", text="Select a directory to search for all video files within the chosen directory and all of its containing subdirectories", font=('Helvetica', 16))
+    label_select_directory.pack(fill=tk.X, pady=20, padx=20)
+
+    button_select_directory = tk.Button(root, text="Select Directory", width=20, command=lambda: selectDirectory(root, label_select_directory, button_select_directory))
+    button_select_directory.pack(pady=20)
+
+    root.mainloop()
+
 def inspectVideoFiles(directory, tkinter_window, listbox_completed_videos, index_start, log_file, progress_bar, markcorrupt, button_kill_ffmpeg, button_ffmpeg_verify):
     try:
         global g_count
@@ -400,7 +431,13 @@ def inspectVideoFiles(directory, tkinter_window, listbox_completed_videos, index
         button_kill_ffmpeg.destroy()
         button_ffmpeg_verify.destroy()
     
-    #TODO Add restart button to take user back through prompts to remove need to relaunch
+    if isMacOs():
+        # https://stackoverflow.com/questions/1529847/how-to-change-the-foreground-or-background-colour-of-a-tkinter-button-on-mac-os
+        button_restart = MacButton(tkinter_window, background='#E34234', borderless=1, foreground='white', text="Start Over", width=500, command=lambda: initialState(tkinter_window))
+        button_restart.pack(pady=10)
+    elif isWindowsOs():
+        button_restart = tk.Button(tkinter_window, background='#E34234', foreground='white', text="Start Over", width=200, command=lambda: initialState(tkinter_window))
+        button_restart.pack(pady=10)
 
 def start_program(directory, root, index_start, log_file, label_chosen_directory, label_chosen_directory_var, label_video_count, label_video_count_var, label_index_start, entry_index_input, label_explanation, button_start, listbox_completed_videos, delcheckbox, markcorrupt):
     try:
@@ -417,7 +454,7 @@ def start_program(directory, root, index_start, log_file, label_chosen_directory
 
         label_progress_text = tk.Label(root, text="Progress:", font=('Helvetica Bold', 18))
         label_progress_text.pack(fill=tk.X, pady=10)
-
+        global g_process
         g_progress.set("0%")
         label_progress_var = tk.Label(root, textvariable=g_progress, font=('Helvetica', 50))
         label_progress_var.pack(fill=tk.X, pady=(0, 10))
@@ -428,11 +465,12 @@ def start_program(directory, root, index_start, log_file, label_chosen_directory
 
         label_currently_processing_text = tk.Label(root, text="Currently Processing:", font=('Helvetica Bold', 18))
         label_currently_processing_text.pack(fill=tk.X, pady=10)
-
+        global g_count
         g_count.set("0 / 0")
         label_count_var = tk.Label(root, textvariable=g_count, font=('Helvetica', 16))
         label_count_var.pack(fill=tk.X, pady=(0, 10))
 
+        global g_currently_processing
         g_currently_processing.set("N/A")
         label_currently_processing_var = tk.Label(root, textvariable=g_currently_processing, font=('Helvetica', 16))
         label_currently_processing_var.pack(fill=tk.X, pady=(0, 10))
@@ -561,24 +599,4 @@ if isLinuxOs():
     # Linux not yet supported
     exit()
 
-root = tk.Tk()
-root.title("Corrupt Video Inspector")
-if isMacOs():
-    root.geometry("500x650")
-if isWindowsOs():
-    root.geometry("500x750")
-    icon_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'icon.ico'))
-    root.iconbitmap(default=icon_path)
-g_progress = tk.StringVar()
-g_count = tk.StringVar()
-g_currently_processing = tk.StringVar()
-g_mac_pid = ''
-g_windows_pid = ''
-
-label_select_directory = tk.Label(root, wraplength=450, justify="left", text="Select a directory to search for all video files within the chosen directory and all of its containing subdirectories", font=('Helvetica', 16))
-label_select_directory.pack(fill=tk.X, pady=20, padx=20)
-
-button_select_directory = tk.Button(root, text="Select Directory", width=20, command=lambda: selectDirectory(root, label_select_directory, button_select_directory))
-button_select_directory.pack(pady=20)
-
-root.mainloop()
+initialState()
